@@ -1,0 +1,1098 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
+#include <windows.h>
+#include <winsock.h>
+#include <conio.h>
+#include <stdio.h>
+#include <string.h>
+#include <sstream>
+#pragma comment (lib, "ws2_32.lib")
+void getWord(char *mas);
+void SendMessageToClient(int ID);
+int ClientCount = 0;
+SOCKET *Connections;
+using namespace std;
+char  *key = new char[30];
+string mas[1000];
+int trueconnection[9999];
+char *sp = new char[6];
+char *xp = new char[6];
+char *gp = new char[36];
+const char *alphab = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+#pragma once
+
+
+#include "md5.h"
+
+
+#include <cstdio>
+
+
+
+#define S11 7
+#define S12 12
+#define S13 17
+#define S14 22
+#define S21 5
+#define S22 9
+#define S23 14
+#define S24 20
+#define S31 4
+#define S32 11
+#define S33 16
+#define S34 23
+#define S41 6
+#define S42 10
+#define S43 15
+#define S44 21
+
+
+
+inline MD5::uint4 MD5::F(uint4 x, uint4 y, uint4 z) {
+	return x & y | ~x&z;
+}
+
+inline MD5::uint4 MD5::G(uint4 x, uint4 y, uint4 z) {
+	return x & z | y & ~z;
+}
+
+inline MD5::uint4 MD5::H(uint4 x, uint4 y, uint4 z) {
+	return x ^ y^z;
+}
+
+inline MD5::uint4 MD5::I(uint4 x, uint4 y, uint4 z) {
+	return y ^ (x | ~z);
+}
+
+inline MD5::uint4 MD5::rotate_left(uint4 x, int n) {
+	return (x << n) | (x >> (32 - n));
+}
+
+inline void MD5::FF(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac) {
+	a = rotate_left(a + F(b, c, d) + x + ac, s) + b;
+}
+
+inline void MD5::GG(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac) {
+	a = rotate_left(a + G(b, c, d) + x + ac, s) + b;
+}
+
+inline void MD5::HH(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac) {
+	a = rotate_left(a + H(b, c, d) + x + ac, s) + b;
+}
+
+inline void MD5::II(uint4 &a, uint4 b, uint4 c, uint4 d, uint4 x, uint4 s, uint4 ac) {
+	a = rotate_left(a + I(b, c, d) + x + ac, s) + b;
+}
+
+
+
+
+MD5::MD5()
+{
+	init();
+}
+
+MD5::MD5(const std::string &text)
+{
+	init();
+	update(text.c_str(), text.length());
+	finalize();
+}
+
+
+
+void MD5::init()
+{
+	finalized = false;
+
+	count[0] = 0;
+	count[1] = 0;
+
+
+	state[0] = 0x67452301;
+	state[1] = 0xefcdab89;
+	state[2] = 0x98badcfe;
+	state[3] = 0x10325476;
+}
+
+void MD5::decode(uint4 output[], const uint1 input[], size_type len)
+{
+	for (unsigned int i = 0, j = 0; j < len; i++, j += 4)
+		output[i] = ((uint4)input[j]) | (((uint4)input[j + 1]) << 8) |
+		(((uint4)input[j + 2]) << 16) | (((uint4)input[j + 3]) << 24);
+}
+
+void MD5::encode(uint1 output[], const uint4 input[], size_type len)
+{
+	for (size_type i = 0, j = 0; j < len; i++, j += 4) {
+		output[j] = input[i] & 0xff;
+		output[j + 1] = (input[i] >> 8) & 0xff;
+		output[j + 2] = (input[i] >> 16) & 0xff;
+		output[j + 3] = (input[i] >> 24) & 0xff;
+	}
+}
+
+void MD5::transform(const uint1 block[blocksize])
+{
+	uint4 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
+	decode(x, block, blocksize);
+
+	/* Round 1 */
+	FF(a, b, c, d, x[0], S11, 0xd76aa478); /* 1 */
+	FF(d, a, b, c, x[1], S12, 0xe8c7b756); /* 2 */
+	FF(c, d, a, b, x[2], S13, 0x242070db); /* 3 */
+	FF(b, c, d, a, x[3], S14, 0xc1bdceee); /* 4 */
+	FF(a, b, c, d, x[4], S11, 0xf57c0faf); /* 5 */
+	FF(d, a, b, c, x[5], S12, 0x4787c62a); /* 6 */
+	FF(c, d, a, b, x[6], S13, 0xa8304613); /* 7 */
+	FF(b, c, d, a, x[7], S14, 0xfd469501); /* 8 */
+	FF(a, b, c, d, x[8], S11, 0x698098d8); /* 9 */
+	FF(d, a, b, c, x[9], S12, 0x8b44f7af); /* 10 */
+	FF(c, d, a, b, x[10], S13, 0xffff5bb1); /* 11 */
+	FF(b, c, d, a, x[11], S14, 0x895cd7be); /* 12 */
+	FF(a, b, c, d, x[12], S11, 0x6b901122); /* 13 */
+	FF(d, a, b, c, x[13], S12, 0xfd987193); /* 14 */
+	FF(c, d, a, b, x[14], S13, 0xa679438e); /* 15 */
+	FF(b, c, d, a, x[15], S14, 0x49b40821); /* 16 */
+
+											/* Round 2 */
+	GG(a, b, c, d, x[1], S21, 0xf61e2562); /* 17 */
+	GG(d, a, b, c, x[6], S22, 0xc040b340); /* 18 */
+	GG(c, d, a, b, x[11], S23, 0x265e5a51); /* 19 */
+	GG(b, c, d, a, x[0], S24, 0xe9b6c7aa); /* 20 */
+	GG(a, b, c, d, x[5], S21, 0xd62f105d); /* 21 */
+	GG(d, a, b, c, x[10], S22, 0x2441453); /* 22 */
+	GG(c, d, a, b, x[15], S23, 0xd8a1e681); /* 23 */
+	GG(b, c, d, a, x[4], S24, 0xe7d3fbc8); /* 24 */
+	GG(a, b, c, d, x[9], S21, 0x21e1cde6); /* 25 */
+	GG(d, a, b, c, x[14], S22, 0xc33707d6); /* 26 */
+	GG(c, d, a, b, x[3], S23, 0xf4d50d87); /* 27 */
+	GG(b, c, d, a, x[8], S24, 0x455a14ed); /* 28 */
+	GG(a, b, c, d, x[13], S21, 0xa9e3e905); /* 29 */
+	GG(d, a, b, c, x[2], S22, 0xfcefa3f8); /* 30 */
+	GG(c, d, a, b, x[7], S23, 0x676f02d9); /* 31 */
+	GG(b, c, d, a, x[12], S24, 0x8d2a4c8a); /* 32 */
+
+											/* Round 3 */
+	HH(a, b, c, d, x[5], S31, 0xfffa3942); /* 33 */
+	HH(d, a, b, c, x[8], S32, 0x8771f681); /* 34 */
+	HH(c, d, a, b, x[11], S33, 0x6d9d6122); /* 35 */
+	HH(b, c, d, a, x[14], S34, 0xfde5380c); /* 36 */
+	HH(a, b, c, d, x[1], S31, 0xa4beea44); /* 37 */
+	HH(d, a, b, c, x[4], S32, 0x4bdecfa9); /* 38 */
+	HH(c, d, a, b, x[7], S33, 0xf6bb4b60); /* 39 */
+	HH(b, c, d, a, x[10], S34, 0xbebfbc70); /* 40 */
+	HH(a, b, c, d, x[13], S31, 0x289b7ec6); /* 41 */
+	HH(d, a, b, c, x[0], S32, 0xeaa127fa); /* 42 */
+	HH(c, d, a, b, x[3], S33, 0xd4ef3085); /* 43 */
+	HH(b, c, d, a, x[6], S34, 0x4881d05); /* 44 */
+	HH(a, b, c, d, x[9], S31, 0xd9d4d039); /* 45 */
+	HH(d, a, b, c, x[12], S32, 0xe6db99e5); /* 46 */
+	HH(c, d, a, b, x[15], S33, 0x1fa27cf8); /* 47 */
+	HH(b, c, d, a, x[2], S34, 0xc4ac5665); /* 48 */
+
+										   /* Round 4 */
+	II(a, b, c, d, x[0], S41, 0xf4292244); /* 49 */
+	II(d, a, b, c, x[7], S42, 0x432aff97); /* 50 */
+	II(c, d, a, b, x[14], S43, 0xab9423a7); /* 51 */
+	II(b, c, d, a, x[5], S44, 0xfc93a039); /* 52 */
+	II(a, b, c, d, x[12], S41, 0x655b59c3); /* 53 */
+	II(d, a, b, c, x[3], S42, 0x8f0ccc92); /* 54 */
+	II(c, d, a, b, x[10], S43, 0xffeff47d); /* 55 */
+	II(b, c, d, a, x[1], S44, 0x85845dd1); /* 56 */
+	II(a, b, c, d, x[8], S41, 0x6fa87e4f); /* 57 */
+	II(d, a, b, c, x[15], S42, 0xfe2ce6e0); /* 58 */
+	II(c, d, a, b, x[6], S43, 0xa3014314); /* 59 */
+	II(b, c, d, a, x[13], S44, 0x4e0811a1); /* 60 */
+	II(a, b, c, d, x[4], S41, 0xf7537e82); /* 61 */
+	II(d, a, b, c, x[11], S42, 0xbd3af235); /* 62 */
+	II(c, d, a, b, x[2], S43, 0x2ad7d2bb); /* 63 */
+	II(b, c, d, a, x[9], S44, 0xeb86d391); /* 64 */
+
+	state[0] += a;
+	state[1] += b;
+	state[2] += c;
+	state[3] += d;
+
+	memset(x, 0, sizeof x);
+}
+
+
+
+void MD5::update(const unsigned char input[], size_type length)
+{
+	size_type index = count[0] / 8 % blocksize;
+
+	
+	if ((count[0] += (length << 3)) < (length << 3))
+		count[1]++;
+	count[1] += (length >> 29);
+
+	// number of bytes we need to fill in buffer
+	size_type firstpart = 64 - index;
+
+	size_type i;
+
+	
+	if (length >= firstpart)
+	{
+
+		memcpy(&buffer[index], input, firstpart);
+		transform(buffer);
+
+		
+		for (i = firstpart; i + blocksize <= length; i += blocksize)
+			transform(&input[i]);
+
+		index = 0;
+	}
+	else
+		i = 0;
+
+	
+	memcpy(&buffer[index], &input[i], length - i);
+}
+
+void MD5::update(const char input[], size_type length)
+{
+	update((const unsigned char*)input, length);
+}
+
+MD5& MD5::finalize()
+{
+	static unsigned char padding[64] = {
+		0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	};
+
+	if (!finalized) {
+		// Save number of bits
+		unsigned char bits[8];
+		encode(bits, count, 8);
+
+		// pad out to 56 mod 64.
+		size_type index = count[0] / 8 % 64;
+		size_type padLen = (index < 56) ? (56 - index) : (120 - index);
+		update(padding, padLen);
+
+		// Append length (before padding)
+		update(bits, 8);
+
+		// Store state in digest
+		encode(digest, state, 16);
+
+		// Zeroize sensitive information.
+		memset(buffer, 0, sizeof buffer);
+		memset(count, 0, sizeof count);
+
+		finalized = true;
+	}
+
+	return *this;
+}
+
+//////////////////////////////
+
+// return hex representation of digest as string
+std::string MD5::hexdigest() const
+{
+	if (!finalized)
+		return "";
+
+	char buf[33];
+	for (int i = 0; i < 16; i++)
+		sprintf(buf + i * 2, "%02x", digest[i]);
+	buf[32] = 0;
+
+	return std::string(buf);
+}
+
+//////////////////////////////
+
+std::ostream& operator<<(std::ostream& out, MD5 md5)
+{
+	return out << md5.hexdigest();
+}
+
+//////////////////////////////
+
+std::string md5(const std::string str)
+{
+	MD5 md5 = MD5(str);
+
+	return md5.hexdigest();
+}
+
+
+
+void Sender()
+{
+
+	const char *_aspda_ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	int symb = 0;
+
+
+	for (int i = 0; i < 25; i++)
+	{
+
+		symb = rand() % 36;
+
+		key[i] = _aspda_[symb];
+
+	}
+	for (int i = 0; i < 25; i++)
+	{
+		symb = rand() % 36;
+		key[i] = _aspda_[symb];
+
+	}
+
+
+
+	for (int i = 0; i < 25; i++)
+	{
+
+		symb = rand() % 36;
+		key[i] = _aspda_[symb];
+
+	}
+	for (int i = 25; i < 30; i++)
+	{
+
+		symb = rand() % 36;
+		key[i] = _aspda_[symb];
+
+	}
+	key[29] = '\0';
+
+
+
+
+}
+int rotate(int xcomp)
+{
+	return (int)(xcomp * log2(xcomp));
+}
+void Sendermk2()
+{
+	int symb = 0;
+	int xcompofkey, ycompofkey = 0;
+	char *keyx = new char[25];
+	for (;; Sleep(60))
+	{
+		for (int i = 0; i < 25; i++)
+		{
+			symb = rand() % 36;
+			xcompofkey = (int)(symb / log2(symb + 2));
+			ycompofkey = (int)rotate(xcompofkey);
+			symb = ycompofkey + xcompofkey;
+			if (!((symb >= 48) && (symb <= 57) && (symb >= 65) && (symb <= 90)))
+				symb = rand() % 90 + 65;
+			keyx[i] = (char)symb;
+			key[25] = keyx[i];
+			if (i>0)
+				key[26] = keyx[i - 1];
+			if (i>1)
+				key[27] = keyx[i - 2];
+			if (i>2)
+				key[28] = keyx[i - 3];
+
+		}
+		key[29] = '\0';
+
+
+	}
+
+
+}
+void Present()
+{
+#ifdef _WIN64
+
+	PINT64 pProcHeap = (PINT64)(__readgsqword(0x60) + 0x30);
+	PUINT32 pFlags = (PUINT32)(*pProcHeap + 0x70);
+	PUINT32 pForceFlags = (PUINT32)(*pProcHeap + 0x74);
+
+
+#endif
+
+	if (*pFlags & ~HEAP_GROWABLE || *pForceFlags != 0)
+	{
+		
+		WSACleanup();
+		exit;
+	}
+	HANDLE hMyMutex = CreateMutex(NULL, FALSE, ("MyMutex"));
+
+	SetHandleInformation(hMyMutex, HANDLE_FLAG_PROTECT_FROM_CLOSE, HANDLE_FLAG_PROTECT_FROM_CLOSE);
+
+
+	__try {
+		CloseHandle(hMyMutex);
+	}
+
+	__except (HANDLE_FLAG_PROTECT_FROM_CLOSE) {
+		
+		WSACleanup();
+		exit;
+	}
+	
+		if (IsDebuggerPresent())
+		{
+			
+			WSACleanup();
+			exit;
+		}
+
+
+
+		BOOL IsDebgPresent = FALSE;
+		CheckRemoteDebuggerPresent(GetCurrentProcess(), &IsDebgPresent);
+		if (IsDebgPresent)
+		{
+		
+			WSACleanup();
+			exit;
+		}
+
+
+		char IsDbgPresent = 0;
+
+
+		if (IsDbgPresent)
+		{
+			
+			WSACleanup();
+			exit;
+		}
+
+		unsigned long NtGlobalFlags = 0;
+
+
+
+		if (NtGlobalFlags & 0x70)
+
+		{
+			
+			WSACleanup();
+			exit;
+		}
+		else
+		{
+			char BufferOver[256];
+			GetModuleFileName(NULL, BufferOver, sizeof(BufferOver));
+
+		
+			typedef unsigned long(__stdcall *pfnNtQueryInformationProcess)(IN  HANDLE,
+				IN  unsigned int, OUT PVOID, IN ULONG, OUT PULONG);
+
+			
+			const int ProcessDbgPort = 7;
+
+	
+			pfnNtQueryInformationProcess NtQueryInfoProcess = NULL;
+
+		
+			unsigned long Ret = 0;
+			unsigned long IsRemotePresent = 0;
+
+			HMODULE hNtDll = LoadLibrary("ntdll.dll");
+			if (hNtDll == NULL)
+			{
+				WSACleanup();
+				exit;
+			}
+
+			NtQueryInfoProcess = (pfnNtQueryInformationProcess)
+				GetProcAddress(hNtDll, "NtQueryInformationProcess");
+			if (NtQueryInfoProcess == NULL)
+			{
+				WSACleanup();
+				exit;
+				
+			}
+
+			
+			Ret = NtQueryInfoProcess(GetCurrentProcess(), ProcessDbgPort,
+				&IsRemotePresent, sizeof(unsigned long), NULL);
+
+	
+			if (Ret == 0x00000000 && IsRemotePresent != 0)
+			{
+
+				WSACleanup();
+				exit;
+
+			}
+		}
+	
+
+
+
+}
+
+void Authorisator()
+{
+	while (true)
+	Present();
+}
+
+void ChecktheSize()
+{
+
+		FILE *pFile = fopen("Server.exe", "rb");
+		long nFileLen = 0;
+		if (pFile)
+		{
+			fseek(pFile, 0, SEEK_END);
+			nFileLen = ftell(pFile);
+			fclose(pFile);
+		}
+
+
+
+		std::string s;
+		std::stringstream out;
+		out << nFileLen;
+		s = out.str();
+
+
+
+		if (md5(s) != md5("40960")) {
+		
+			WSACleanup();
+			exit;
+		}
+
+
+	
+}
+
+int main()
+{
+	ChecktheSize();
+	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)Authorisator, NULL, NULL, NULL);
+	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)Sendermk2, NULL, NULL, NULL);
+	system("chcp < nul 1251");
+
+	
+	for (int i = 0; i < 1000; i++)
+		mas[i] = "";
+	
+	cout << "Server: " << endl;
+	cout << "Serverkey: " << endl;
+	char *str = new char[36];
+	cin >> str;
+	int repeats;
+	cout << "Serial: " << endl;
+	cin >> repeats;
+
+	
+	int marker = 0;
+
+	srand((int)repeats);
+
+	Sender();
+	key[29] = '\0';
+	if (repeats != 777)
+	{
+		return 0;
+	}
+	if (repeats >= 145)
+		repeats = 127 + (int)(repeats % 5) + 3;
+	for (int i = 0; i < ((int)(repeats - 125)); i++)
+	{
+
+		for (int i = 0; i < 30; i++)
+		{
+			key[i] = '\0';
+		}
+
+		key[29] = '\0';
+		Sender();
+	}
+
+	for (int i = 0; i < 5; i++)
+		sp[i] = alphab[rand() % 36 + 0];
+	sp[5] = '\0';
+
+	for (int i = 0; i < 5; i++)
+		xp[i] = key[rand() % 24 + 0];
+	xp[5] = '\0';
+
+
+
+
+	for (int i = 0; i < 35; i++)
+	{
+		if (i < 5)
+		{
+
+			gp[i] = xp[4 - i];
+			if (gp[i] == str[i])
+				marker++;
+			else
+				marker = 0;
+		}
+
+		if ((i > 4) && (i < 30))
+		{
+			gp[i] = key[i - 5];
+			if (gp[i] == str[i])
+				marker++;
+			else
+				marker = 0;
+		}
+
+		if (i > 29)
+		{
+
+			gp[i] = sp[34 - i];
+			if (gp[i] == str[i])
+				marker++;
+			else
+				marker = 0;
+		}
+
+	}
+	gp[35] = '\0';
+	
+
+	
+	if (md5(str+marker) == md5(gp+strlen(gp)))
+	{
+	
+
+	
+	char message[MAX_PATH];
+	const char m_connect[] = "Вы подключились к серверу :) \nНачните печатать свое сообщение!\0";
+	char respond;
+	
+	
+	cout << "Приветствие сервера для пользователей : " <<m_connect << endl;
+	
+
+	WSAData wsa;
+	WORD Version = MAKEWORD(2, 1);
+	WSAStartup(Version, &wsa);
+	Connections = (SOCKET*)calloc(64, sizeof(SOCKET));
+
+	if (WSAStartup(Version, &wsa) != 0)
+	{
+
+		cout << "WSA library startup error." << endl;
+
+	}
+	else
+	{
+
+		cout << "WSA library startup completed." << endl;
+
+	}
+
+	SOCKET Listen = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	SOCKET Connect = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	if (Listen == SOCKET_ERROR || Connect == SOCKET_ERROR)
+	{
+
+		cout << "Ошибка создания сокета" << endl;
+
+	}
+	else
+	{
+		cout << "Сокет создан" << endl;
+
+	}
+
+	SOCKADDR_IN Server;
+
+	Server.sin_family = AF_INET;
+	int port;
+	char ip[16];
+	cout << "ip: " << endl;
+	cin >> ip;
+	cout << "port: " << endl;
+	cin >> port;
+	Server.sin_port = htons(port);
+	Server.sin_addr.S_un.S_addr = inet_addr(ip);
+	
+
+	if (bind(Listen, (SOCKADDR*)&Server, sizeof(Server)) == SOCKET_ERROR)
+	{
+
+		cout << "Ошибка соединения" << endl;
+		while (bind(Listen, (SOCKADDR*)&Server, sizeof(Server)) == SOCKET_ERROR)
+		{
+			cout << "ip: " << endl;
+			cin >> ip;
+			cout << "port: " << endl;
+			cin >> port;
+			Server.sin_port = htons(port);
+			Server.sin_addr.S_un.S_addr = inet_addr(ip);
+		}
+		cout << "Сервер активен" << endl;
+	}
+	else
+	{
+
+		cout << "Сервер активен" << endl;
+
+	}
+
+	listen(Listen, SOMAXCONN);
+	
+	while (true)
+
+	{
+
+		if (Connect = accept(Listen, NULL, NULL))
+	 
+		{
+
+			
+
+			Connections[ClientCount] = Connect;
+			recv(Connect, message, sizeof(message), 0);
+			if ((message[0] == '@') && (message[8] == '_'))
+			{
+				int marker = 0;
+				
+				int repeats;
+
+				int iter;
+				int i;
+
+				repeats = -35 + (unsigned int)message[45];
+				int modific = -35 + (unsigned int)message[46];
+
+				int itrmodific = -35 + (unsigned int)message[47];
+				modific = modific + itrmodific * 256;
+				repeats = repeats + 256 * modific;
+				
+
+
+				char msg[1024] = { 0 };
+
+				if (message[47] != '\0')
+				{
+
+					for (int i = 48; i < strlen(message); i++)
+					{
+						msg[i - 48] = message[i];
+					}
+
+
+
+					
+				}
+
+
+
+
+				char *str = new char[36];
+				for (int i = 9; i < 44; i++)
+				{
+					str[i - 9] = message[i];
+				}
+				str[35] = '\0';
+
+				
+
+
+
+				srand((int)repeats);
+
+				Sender();
+				key[29] = '\0';
+				if (repeats >= 145)
+					repeats = 127 + (int)(repeats % 5) + 3;
+				for (int i = 0; i < ((int)(repeats - 125)); i++)
+				{
+
+					for (int i = 0; i < 30; i++)
+					{
+						key[i] = '\0';
+					}
+
+					key[29] = '\0';
+					Sender();
+				}
+
+				for (int i = 0; i < 5; i++)
+					sp[i] = alphab[rand() % 36 + 0];
+				sp[5] = '\0';
+
+				for (int i = 0; i < 5; i++)
+					xp[i] = key[rand() % 24 + 0];
+				xp[5] = '\0';
+
+
+
+
+				for (int i = 0; i < 35; i++)
+				{
+					if (i < 5)
+					{
+
+						gp[i] = xp[4 - i];
+						if (gp[i] == str[i])
+							marker++;
+						else
+							marker = 0;
+					}
+
+					if ((i > 4) && (i < 30))
+					{
+						gp[i] = key[i - 5];
+						if (gp[i] == str[i])
+							marker++;
+						else
+							marker = 0;
+					}
+
+					if (i > 29)
+					{
+
+						gp[i] = sp[34 - i];
+						if (gp[i] == str[i])
+							marker++;
+						else
+							marker = 0;
+					}
+
+				}
+				gp[35] = '\0';
+				marker = 0;
+				for (int i = 0; i < strlen(str); i++)
+				{
+					str[i] = (unsigned char)((unsigned int)str[i] - rand() % (strlen(str) - 1));
+					if (gp[i] == str[i])
+						marker++;
+					else
+						marker = 0;
+				}
+			
+
+
+			
+
+
+				if (md5(str + marker) == md5(gp + strlen(gp)))
+				{
+
+
+					trueconnection[ClientCount] = 1;
+					printf("Message :");
+					cout << msg << endl;
+					
+					ZeroMemory(message, sizeof(message));
+					ZeroMemory(msg, sizeof(msg));
+				}
+				send(Connections[ClientCount], m_connect, MAX_PATH, NULL);
+
+
+				ClientCount++;
+				CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)SendMessageToClient, (LPVOID)(ClientCount - 1), NULL, NULL);
+				cout << "Авторизация успешна" << endl;
+			}
+			else
+			{
+				send(Connections[ClientCount], "Отказано в доступе", MAX_PATH, NULL);
+				cout << "Авторизация провалена" << endl;
+			}
+			
+
+			
+			
+
+
+		}
+		
+
+
+
+	}
+
+
+}
+
+}
+
+void getWord(char *mas)
+{
+	int c;
+	for (int i = 0; (c = getchar()) != EOF && c != '\n'; ++i)
+		mas[i] = c;
+}
+
+void SendMessageToClient(int ID)
+{
+	
+	
+	
+	char buffer[1024] = { 0 };
+	
+	for (;; Sleep(75))
+
+	{
+
+		if (recv(Connections[ID], buffer, MAX_PATH, NULL))
+		{
+			
+		
+			if ((buffer[0] == '@') && (buffer[8] == '_'))
+			{
+				int marker = 0;
+				
+				int repeats;
+			
+				int iter;
+				int i;
+				
+				repeats = -35+(unsigned int)buffer[45] ;
+				int modific = -35+(unsigned int)buffer[46];
+				
+				int itrmodific = -35 + (unsigned int)buffer[47];
+				modific = modific + itrmodific * 256;
+				repeats = repeats + 256*modific;
+				
+				
+				
+				char msg[1024] = { 0 };
+			
+				if ( buffer[47]!='\0')
+				{ 
+					
+					for (int i = 48; i < strlen(buffer); i++)
+					{
+						msg[i-48] = buffer[i];
+					}
+					
+
+
+				
+				}
+				
+			
+				
+				
+				char *str = new char[36];
+				for (int i = 9; i < 44; i++)
+				{
+					str[i - 9] = buffer[i];
+				}
+				str[35] = '\0';
+				
+				
+				
+					
+					
+					srand((int)repeats);
+					
+					Sender();
+					key[29] = '\0';
+					if (repeats >= 145)
+						repeats = 127 + (int)(repeats % 5) + 3;
+					for (int i = 0; i < ((int)(repeats - 125)); i++)
+					{
+						
+						for (int i = 0; i < 30; i++)
+						{
+							key[i] = '\0';
+						}
+
+						key[29] = '\0';
+						Sender();
+					}
+
+					for (int i = 0; i<5; i++)
+						sp[i] = alphab[rand() % 36 + 0];
+					sp[5] = '\0';
+
+					for (int i = 0; i<5; i++)
+						xp[i] = key[rand() % 24 + 0];
+					xp[5] = '\0';
+
+
+
+
+					for (int i = 0; i < 35; i++)
+					{
+						if (i < 5)
+						{
+
+							gp[i] = xp[4 - i];
+							if (gp[i] == str[i])
+								marker++;
+							else
+								marker = 0;
+						}
+							
+						if ((i > 4) && (i < 30))
+						{
+							gp[i] = key[i - 5];
+							if (gp[i] == str[i])
+								marker++;
+							else
+								marker = 0;
+						}
+							
+						if (i > 29)
+						{
+
+							gp[i] = sp[34 - i];
+							if (gp[i] == str[i])
+								marker++;
+							else
+								marker = 0;
+						}
+
+					}
+					gp[35] = '\0';
+					marker = 0;
+					for (int i = 0; i < strlen(str); i++)
+					{
+						str[i] = (unsigned char)((unsigned int)str[i] - rand() % (strlen(str) - 1));
+						if (gp[i] == str[i])
+							marker++;
+						else
+							marker = 0;
+					}
+				
+					
+
+					
+					
+					
+				if (md5(str + marker) == md5(gp + strlen(gp)))
+				{
+					
+					
+					
+						printf("Message :");
+						cout << msg << endl;
+						if (strlen(msg) > 0)
+						{
+							for (int i = 0; i <= ClientCount; ++i)
+							{
+								if (trueconnection[i]==1)
+								send(Connections[i], msg, MAX_PATH, NULL);
+
+							}
+						}
+						ZeroMemory(buffer, sizeof(buffer));
+						ZeroMemory(msg, sizeof(buffer));
+				}
+					
+				ZeroMemory(buffer, sizeof(buffer));
+			}
+
+			
+		}
+		
+	}
+
+}
